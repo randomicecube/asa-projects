@@ -6,27 +6,47 @@
 class Card {
   Card *next;
   int value;
+  int count;
   public:
-    Card(int value) {
-      this->value = value;
-      this->next = nullptr;
-    }
-    int getValue() {
-      return this->value;
-    }
-    Card *getNext() {
-      return this->next;
-    }
-    void setNext(Card *next) {
-      this->next = next;
-    }
+    Card(int value);
+    int getValue();
+    int getCount();
+    Card *getNext();
+    void setCount(int count);
+    void setNext(Card *next);
 };
+
+Card::Card(int value) {
+  this->value = value;
+  this->next = nullptr;
+}
+
+int Card::getValue() {
+  return this->value;
+}
+
+int Card::getCount() {
+  return this->count;
+}
+
+Card *Card::getNext() {
+  return this->next;
+}
+
+void Card::setCount(int count) {
+  this->count = count;
+}
+
+void Card::setNext(Card *next) {
+  this->next = next;
+}
 
 int parseVector(std::vector<Card> &v);
 void printResults(int longest, int amount);
 int binSearchPile(std::vector<std::vector<int>> piles, int target);
-std::vector<std::vector<Card>> pushCardsToPiles(std::vector<Card> &cards, int cardAmount);
-int getPathAmount(std::vector<Card> &pile);
+void addLeftmostPile(std::vector<std::vector<Card>> &piles, Card card);
+void addRightmostMiddlePile(std::vector<std::vector<Card>> &piles, Card card, int value, int pileIndex);
+std::vector<std::vector<Card>> pushCardsToPiles(std::vector<Card> cards);
 void solveFirstProblem();
 void solveSecondProblem();
 
@@ -59,8 +79,10 @@ void printResults(int longest, int amount) {
   std::cout << longest << " " << amount << std::endl;
 }
 
+// TODO - MAKE A SINGLE BINSEARCH FUNCTION - THIS IS AWFUL AWFUL CODE
+
 // algorithm similar to binary search, returns the leftmost pile where a card can go
-int binSearchPile(std::vector<std::vector<Card>> piles, int target) {
+int binSearchPiles(std::vector<std::vector<Card>> piles, int target) {
   int left = 0;
   int right = piles.size() - 1;
   int mid;
@@ -79,88 +101,82 @@ int binSearchPile(std::vector<std::vector<Card>> piles, int target) {
   return left;
 }
 
-std::vector<std::vector<Card>> pushCardsToPiles(std::vector<Card> &cards, int cardAmount) {
+int binSearchSinglePile(std::vector<Card> pile, int target) {
+  int pileSize = pile.size();
+  int left = 0;
+  int right = pileSize - 1;
+  int mid;
+  int backCard;
+  while (left <= right) {
+    mid = (left + right) / 2;
+    backCard = pile[mid].getValue();
+    if (backCard == target) {
+      return mid;
+    } else if (backCard > target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+  return right;
+}
+
+void addLeftmostPile(std::vector<std::vector<Card>> &piles, Card card) {
+  if (piles.size() == 0) {
+    card.setCount(1);
+    piles.push_back({card});
+  } else {
+    card.setCount(piles[0].back().getCount() + 1);
+    piles[0].push_back(card);
+  }
+}
+
+void addRightmostMiddlePile(std::vector<std::vector<Card>> &piles, Card card, int value, int pileIndex) {
+  std::vector<Card> prevPile = piles[pileIndex - 1];
+  int cardIndex = binSearchSinglePile(prevPile, value);
+  int cumSum = prevPile.back().getCount();
+  int pilesSize = piles.size();
+
+  if (cardIndex != -1) {
+    cumSum -= prevPile[cardIndex].getCount();
+  }
+
+  if (pileIndex == pilesSize) {
+    card.setCount(cumSum);
+    piles.push_back({card});
+  } else {
+    cumSum += piles[pileIndex].back().getCount();
+    card.setCount(cumSum);
+    piles[pileIndex].push_back(card);
+  }
+}
+
+std::vector<std::vector<Card>> pushCardsToPiles(std::vector<Card> cards) {
   std::vector<std::vector<Card>> piles;
   for (Card card: cards) {
-    int num = card.getValue();
-    int index = binSearchPile(piles, num);
-    Card newCard = Card(num);
-    if (index != 0) {
-      newCard.setNext(&piles[index - 1].back());
-    }
-    if (index == (int) piles.size()) {
-      std::vector<Card> newPile = {newCard};
-      piles.push_back(newPile);
-      for (Card card: newPile) {
-        std::cout << "test" << std::endl;
-        std::cout << card.getValue() << " " << (card.getNext() == nullptr ? -1 : card.getNext()->getValue()) << std::endl;
-        std::cout << "end test" << std::endl;
-      }
+    int value = card.getValue();
+    int pileIndex = binSearchPiles(piles, value);
+    Card newCard = Card(value);
+
+    if (pileIndex == 0) {
+      addLeftmostPile(piles, newCard);
     } else {
-      for (Card card: piles[index]) {
-        std::cout << "test else BEFORE" << std::endl;
-        std::cout << card.getValue() << " " << (card.getNext() == nullptr ? -1 : card.getNext()->getValue()) << std::endl;
-        std::cout << "end test else BEFORE" << std::endl;
-      }
-      piles[index].push_back(newCard);
-      std::cout << "testing for " << num << std::endl;
-      for (Card card: piles[index]) {
-        std::cout << "test else" << std::endl;
-        std::cout << card.getValue() << " " << (card.getNext() == nullptr ? -1 : card.getNext()->getValue()) << std::endl;
-        std::cout << "end test else " << std::endl;
-      }
+      addRightmostMiddlePile(piles, newCard, value, pileIndex);
     }
+
   }
   return piles;
 }
 
-int getPathAmount(std::vector<Card> &pile) {
-  int paths = pile.size();
-  Card *prev = nullptr;
-  std::cout << "beginning: paths is " << paths << std::endl;
-  for (Card card: pile) {
-    std::cout << "card is " << card.getValue() << std::endl;
-    if (prev == nullptr) {
-      std::cout << "prev is null" << std::endl;
-      prev = card.getNext();
-    } else if (prev->getValue() != card.getNext()->getValue()){
-      std::cout << "brah" << std::endl;
-      paths++;
-      prev = card.getNext();
-    }
-    std::cout << "did dis ting fail or " << std::endl;
-  }
-  std::cout << "end: paths is " << paths << std::endl;
-  return paths;
-}
-
-// find longest increasing subsequence in an array
-// output the longest increasing subsequence size AND the amount of increasing subsequences with that size
-// algorithm is based on patience sorting, can be found at:
-// https://www.geeksforgeeks.org/longest-monotonically-increasing-subsequence-size-n-log-n/
+// following patience sorting algorithm
 void solveFirstProblem() {
   std::vector<Card> elements;
-  int numElements = parseVector(elements);
-
-  if (numElements == 0) {
+  if (parseVector(elements) == 0) { // no elements
     printResults(0, 0);
     return;
   }
-
-  std::vector<std::vector<Card>> piles = pushCardsToPiles(elements, numElements);
-  std::vector<Card> backPile = piles.back();
-  int paths = getPathAmount(backPile);
-
-  for (std::vector<Card> pile: piles) {
-    for (Card card: pile) {
-      int num = card.getValue();
-      int nextValue = card.getNext() == nullptr ? -1 : card.getNext()->getValue();
-      std::cout << num << " next " << nextValue << std::endl;
-    }
-    std::cout << std::endl << "---" << std::endl;
-  }
-
-  printResults(piles.size(), paths);
+  std::vector<std::vector<Card>> piles = pushCardsToPiles(elements);
+  printResults(piles.size(), piles.back().back().getCount());
 }
 
 void solveSecondProblem() { }
