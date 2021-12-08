@@ -1,3 +1,4 @@
 # Don't add .out files to git
 
 **/src/*.out
+**/*.py
