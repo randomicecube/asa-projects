@@ -22,11 +22,11 @@ int main() {
 
   if (numSequences == FIRST) {
     std::vector<Card> v;
-    int noElements = parseVector(v);
+    ll noElements = parseVector(v);
     solveLIS(v, noElements);
   } else {
+    std::vector<Card> v1, v2;
     ll noElements1, noElements2;
-    std::vector<ll> v1, v2;
     noElements1 = parseVector(v1);
     noElements2 = parseVector(v2);
     solveLCIS(v1, v2, noElements1, noElements2);
