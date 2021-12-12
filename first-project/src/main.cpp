@@ -2,20 +2,21 @@
 #include <vector>
 #include <bits/stdc++.h>
 
-#define FIRST 1
+typedef unsigned long long ll;
+typedef ll Card;
+typedef std::vector<Card> Pile;
 
-typedef long long ll;
-typedef std::vector<ll> Pile;
-typedef ll Card; 
+#define FIRST 1
+#define NOT_FOUND (ll) -1
 
 ll parseVector(std::vector<Card> &v);
-void printResults(ll longest, ll amount);
+void addLeftmostPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, Card card);
+void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, ll pileIndex, Card card);
 void solveLIS(std::vector<Card> &v, ll noElements); // LIS standing for Longest Increasing Subsequence
-void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, int noElements1, int noElements2); // LCIS standing for Longest Common Increasing Subsequence
-std::vector<ll> generateVector(ll n);
+void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2); // LCIS standing for Longest Common Increasing Subsequence
 
 int main() {
-  int numSequences;
+  int numSequences = FIRST;
   std::cin >> numSequences;
   std::cin.ignore(); // consumes newline
 
@@ -36,10 +37,10 @@ int main() {
 
 ll parseVector(std::vector<Card> &v) {
   ll numElements = 0;
-  int num;
+  ll num;
   char delimiter;
   bool keepReading = true;
-  while (keepReading && scanf("%d%c", &num, &delimiter) != EOF) {
+  while (keepReading && scanf("%lld%c", &num, &delimiter) != EOF) {
     v.push_back(num);
     if (delimiter == '\n') {
       keepReading = false;
@@ -47,10 +48,6 @@ ll parseVector(std::vector<Card> &v) {
     numElements++;
   }
   return numElements;
-}
-
-void printResults(ll longest, ll amount) {
-  std::cout << longest << " " << amount << std::endl;
 }
 
 void addLeftmostPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, Card card) {
@@ -65,18 +62,18 @@ void addLeftmostPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cum
 }
 
 void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, ll pileIndex, Card card) {
-  ll cardIndex = lower_bound(
+  ll cardIndex = upper_bound(
     piles[pileIndex - 1].begin(),
     piles[pileIndex - 1].end(),
     card,
-    std::greater<int>()
+    std::greater<ll>()
   ) - piles[pileIndex - 1].begin();
   cardIndex--; // we always want the card that is just "under" the one we found
 
   ll sum = cumSums[pileIndex - 1].back();
   ll pilesSize = piles.size();
   
-  if (cardIndex != -1) {
+  if (cardIndex != NOT_FOUND) {
     sum -= cumSums[pileIndex - 1][cardIndex];
   }
 
@@ -90,9 +87,9 @@ void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSum
   }
 }
 
-void solveLIS(std::vector<ll> &v, ll noElements) { // solve the longest increasing subsequence problem using patience sorting
+void solveLIS(std::vector<ll> &v, ll noElements) {
   if (noElements == 0) {
-    printResults(0, 0);
+    std::cout << 0 << 0 << std::endl;
     return;
   }
 
@@ -109,35 +106,25 @@ void solveLIS(std::vector<ll> &v, ll noElements) { // solve the longest increasi
     ) - piles.begin();
     pileIndex == 0 ? addLeftmostPile(piles, cumSums, card) : addOtherPile(piles, cumSums, pileIndex, card);
   }
- 
-  printResults(piles.size(), cumSums.back().back());
+
+  std::cout << piles.size() << " " << cumSums.back().back() << std::endl;
 }
 
-void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, int noElements1, int noElements2) {
+void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2) {
   // each table element will be the max LCS ending in that index's element in v2
-  // if an element is not in v2, it will be 0 in the table!
-  // TODO - still doesnt work for vectors with repeated elements (i.e 1 2 3 and 1 2 2 3 2)
-  std::vector<ll> table = std::vector<ll>(noElements2, 0);
-  std::unordered_map<ll, ll> amounts; // TODO is it access O(1) or O(n)?
+  // if an element is not in both vectors, it will be 0 in the table!
+  std::vector<ll> lengths = std::vector<ll>(noElements2, 0);
 
   for (ll i = 0; i < noElements1; i++) {
-    ll currMax = 0;
-    for (ll j = 0; j < noElements2; j++) {
+    for (ll j = 0, currMax = 0; j < noElements2; j++) {
       if (v1[i] > v2[j]) {
-        currMax = std::max(table[j], currMax); 
+        currMax = std::max(lengths[j], currMax); 
       } else if (v1[i] == v2[j]) {
-        ll newMax = std::max(table[j], currMax + 1);
-        table[j] = newMax;
-        amounts[newMax]++;
+        lengths[j] = std::max(lengths[j], currMax + 1);
       }
     }
   }
 
-  for (ll num: table) {
-    std::cout << num << " ";
-  }
-  std::cout << std::endl;
-
-  ll maxElement = *std::max_element(table.begin(), table.end());
-  printResults(maxElement, amounts[maxElement]);
+  ll maxElement = *std::max_element(lengths.begin(), lengths.end());
+  std::cout << maxElement << std::endl;
 }
