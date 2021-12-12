@@ -113,6 +113,11 @@ void solveLIS(std::vector<ll> &v, ll noElements) {
 void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2) {
   // each table element will be the max LCS ending in that index's element in v2
   // if an element is not in both vectors, it will be 0 in the table!
+  if (noElements1 == 0 || noElements2 == 0) {
+    std::cout << 0 << std::endl;
+    return;
+  }
+  
   std::vector<ll> lengths = std::vector<ll>(noElements2, 0);
 
   for (ll i = 0; i < noElements1; i++) {
