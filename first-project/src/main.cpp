@@ -6,7 +6,8 @@ typedef unsigned long long ll;
 typedef ll Card;
 typedef std::vector<Card> Pile;
 
-#define FIRST 1
+#define FIRST_PROBLEM 1
+#define LEFT_PILE 0
 #define NOT_FOUND (ll) -1
 
 ll parseVector(std::vector<Card> &v);
@@ -16,11 +17,11 @@ void solveLIS(std::vector<Card> &v, ll noElements); // LIS standing for Longest 
 void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2); // LCIS standing for Longest Common Increasing Subsequence
 
 int main() {
-  int numSequences = FIRST;
+  int numSequences;
   std::cin >> numSequences;
   std::cin.ignore(); // consumes newline
 
-  if (numSequences == FIRST) {
+  if (numSequences == FIRST_PROBLEM) {
     std::vector<Card> v;
     ll noElements = parseVector(v);
     solveLIS(v, noElements);
@@ -55,8 +56,8 @@ void addLeftmostPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cum
     piles.push_back({card});
     cumSums.push_back({1});
   } else {
-    ll sum = piles[0].size() + 1;
-    piles[0].push_back(card);
+    ll sum = piles[LEFT_PILE].size() + 1;
+    piles[LEFT_PILE].push_back(card);
     cumSums[0].push_back(sum);
   }
 }
@@ -89,7 +90,7 @@ void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSum
 
 void solveLIS(std::vector<ll> &v, ll noElements) {
   if (noElements == 0) {
-    std::cout << 0 << 0 << std::endl;
+    std::cout << 0 << 0 << '\n';
     return;
   }
 
@@ -104,17 +105,22 @@ void solveLIS(std::vector<ll> &v, ll noElements) {
         return pile1.back() < card;
       }
     ) - piles.begin();
-    pileIndex == 0 ? addLeftmostPile(piles, cumSums, card) : addOtherPile(piles, cumSums, pileIndex, card);
-  }
 
-  std::cout << piles.size() << " " << cumSums.back().back() << std::endl;
+		if (pileIndex == LEFT_PILE) {
+			addLeftmostPile(piles, cumSums, card);
+		} else {
+			addOtherPile(piles, cumSums, pileIndex, card);
+  	}
+	}
+
+  std::cout << piles.size() << " " << cumSums.back().back() << '\n';
 }
 
 void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2) {
   // each table element will be the max LCS ending in that index's element in v2
   // if an element is not in both vectors, it will be 0 in the table!
   if (noElements1 == 0 || noElements2 == 0) {
-    std::cout << 0 << std::endl;
+    std::cout << 0 << '\n';
     return;
   }
   
@@ -131,5 +137,5 @@ void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noEl
   }
 
   ll maxElement = *std::max_element(lengths.begin(), lengths.end());
-  std::cout << maxElement << std::endl;
+  std::cout << maxElement << '\n';
 }
