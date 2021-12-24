@@ -1,8 +1,16 @@
+/*************************************************************
+ * IST - ASA 21/22
+ * Group - al038
+ * Diogo Melita, 99202
+ * Diogo Gaspar, 99207
+ ************************************************************/
+
 #include <iostream>
 #include <vector>
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <unordered_map>
 
-typedef unsigned long long ll;
+typedef long ll;
 typedef ll Card;
 typedef std::vector<Card> Pile;
 
@@ -11,10 +19,12 @@ typedef std::vector<Card> Pile;
 #define NOT_FOUND (ll) -1
 
 ll parseVector(std::vector<Card> &v);
+void parseFirstCommonVector(std::vector<Card> &v, std::unordered_map<ll, bool> &m);
+ll parseSecondCommonVector(std::vector<Card> &v, std::unordered_map<ll, bool> &m);
 void addLeftmostPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, Card card);
 void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSums, ll pileIndex, Card card);
 void solveLIS(std::vector<Card> &v, ll noElements); // LIS standing for Longest Increasing Subsequence
-void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2); // LCIS standing for Longest Common Increasing Subsequence
+void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements2); // LCIS standing for Longest Common Increasing Subsequence
 
 int main() {
   int numSequences;
@@ -27,10 +37,11 @@ int main() {
     solveLIS(v, noElements);
   } else {
     std::vector<Card> v1, v2;
-    ll noElements1, noElements2;
-    noElements1 = parseVector(v1);
-    noElements2 = parseVector(v2);
-    solveLCIS(v1, v2, noElements1, noElements2);
+    std::unordered_map<ll, bool> map;
+    ll noElements2;
+    parseFirstCommonVector(v1, map);
+    noElements2 = parseSecondCommonVector(v2, map);
+    solveLCIS(v1, v2, noElements2);
   }
   
   return 0;
@@ -40,13 +51,42 @@ ll parseVector(std::vector<Card> &v) {
   ll numElements = 0;
   ll num;
   char delimiter;
-  bool keepReading = true;
-  while (keepReading && scanf("%lld%c", &num, &delimiter) != EOF) {
+  while (scanf("%ld%c", &num, &delimiter) != EOF) {
     v.push_back(num);
-    if (delimiter == '\n') {
-      keepReading = false;
-    }
     numElements++;
+    if (delimiter == '\n') {
+      return numElements;
+    }
+  }
+	return numElements;
+}
+
+void parseFirstCommonVector(std::vector<Card> &v, std::unordered_map<ll, bool> &m) {
+  ll numElements = 0;
+  ll num;
+  char delimiter;
+  while (scanf("%ld%c", &num, &delimiter) != EOF) {
+    v.push_back(num);
+    m[num] = true;
+    numElements++;
+    if (delimiter == '\n') {
+      return;
+    }
+  }
+}
+
+ll parseSecondCommonVector(std::vector<Card> &v, std::unordered_map<ll, bool> &m) {
+  ll numElements = 0;
+  ll num;
+  char delimiter;
+  while (scanf("%ld%c", &num, &delimiter) != EOF) {
+    if (m[num]) {
+      v.push_back(num);
+      numElements++;
+    }
+    if (delimiter == '\n') {
+      return numElements;
+    }
   }
   return numElements;
 }
@@ -89,11 +129,6 @@ void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSum
 }
 
 void solveLIS(std::vector<ll> &v, ll noElements) {
-  if (noElements == 0) {
-    std::cout << 0 << 0 << '\n';
-    return;
-  }
-
   std::vector<Pile> piles;
   std::vector<std::vector<ll>> cumSums;
   for (Card card: v) {
@@ -101,9 +136,7 @@ void solveLIS(std::vector<ll> &v, ll noElements) {
       piles.begin(),
       piles.end(),
       card,
-      [](const Pile &pile1, Card card) {
-        return pile1.back() < card;
-      }
+      [](const Pile &pile, Card card) { return pile.back() < card; }
     ) - piles.begin();
 
 		if (pileIndex == LEFT_PILE) {
@@ -116,26 +149,25 @@ void solveLIS(std::vector<ll> &v, ll noElements) {
   std::cout << piles.size() << " " << cumSums.back().back() << '\n';
 }
 
-void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements1, ll noElements2) {
+void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements2) {
   // each table element will be the max LCS ending in that index's element in v2
   // if an element is not in both vectors, it will be 0 in the table!
-  if (noElements1 == 0 || noElements2 == 0) {
-    std::cout << 0 << '\n';
-    return;
-  }
-  
-  std::vector<ll> lengths = std::vector<ll>(noElements2, 0);
+  std::vector<int> lengths = std::vector<int>(noElements2, 0);
+  int currMax;
+	ll secondVecElement;
 
-  for (ll i = 0; i < noElements1; i++) {
-    for (ll j = 0, currMax = 0; j < noElements2; j++) {
-      if (v1[i] > v2[j]) {
+  for (ll firstVecElement: v1) {
+    currMax = 0;
+    for (ll j = 0; j < noElements2; j++) {
+			secondVecElement = v2[j];
+      if (firstVecElement > secondVecElement) {
         currMax = std::max(lengths[j], currMax); 
-      } else if (v1[i] == v2[j]) {
+      } else if (firstVecElement == secondVecElement) {
         lengths[j] = std::max(lengths[j], currMax + 1);
       }
     }
   }
 
-  ll maxElement = *std::max_element(lengths.begin(), lengths.end());
-  std::cout << maxElement << '\n';
+  int maxLength = *std::max_element(lengths.begin(), lengths.end());
+  std::cout << maxLength << '\n';
 }
