@@ -1,5 +1,4 @@
 \documentclass[12pt]{article}
-\usepackage{amsmath}
 \usepackage[margin=3cm]{geometry}
 \usepackage[portuguese]{babel}
 \usepackage[utf8]{inputenc}
@@ -17,7 +16,7 @@
     urlcolor=blue,
     citecolor=black,
 }
-\usepackage{natbib}
+\usepackage[backend=bibtex]{biblatex}
 \usepackage{graphicx}
 \pagestyle{plain}
 
@@ -35,16 +34,13 @@
 \end{center}
 
 \section{Descrição do Problema e da Solução}
-O projeto propunha a resolução de dois problemas clássicos associados à programação dinâmica: o de, dada uma sequência de inteiros, indicar o comprimento da sua maior subsequência estritamente crescente, \textbf{LIS}, e respetiva quantidade, e o de, dadas duas sequências de inteiros, indicar o comprimento da maior subsequência comum estritamente crescente entre ambas, \textbf{LCIS}. 
+Foi proposta a resolução de dois problemas clássicos associados à programação dinâmica: o de, dada uma sequência de inteiros, indicar o comprimento da sua maior subsequência estritamente crescente, \textbf{LIS}, e respetiva quantidade, e o de, dadas duas sequências de inteiros, indicar o comprimento da maior subsequência comum estritamente crescente entre ambas, \textbf{LCIS}. 
 
 \vspace{0.5mm}
-As soluções encontradas acabaram por não ter grande relação entre si. Para o \textbf{primeiro problema}, recorreu-se ao \textit{patience sorting} - a sua estrutura permite organizar os números em \textit{pilhas}, considerando cada número uma \textit{carta}. Cada carta é colocada na pilha mais à esquerda possível - pode-se colocar uma carta numa pilha caso a carta do topo da mesma tenha valor maior ou igual à da carta que queremos inserir. São mantidas somas cumulativas em cada carta, correspondendo à LIS a terminar nela caso o algoritmo parasse aí. Finalizado o algoritmo, tem-se que o número de pilhas corresponde ao comprimento máximo da LIS, e que a soma cumulativa guardada na carta do topo da pilha mais à direita será o número de ocorrências dessa mesma LIS.
+Para solucionar o \textbf{primeiro problema}, recorreu-se ao \textit{patience sorting} [1] - a sua estrutura permite organizar os números em \textit{pilhas}, considerando cada número uma \textit{carta}. Cada carta é colocada na pilha mais à esquerda possível - pode colocar-se uma carta numa pilha caso a carta do topo da mesma tenha valor igual ou superior à da carta a inserir. São mantidas somas cumulativas em cada carta, correspondendo à LIS a terminar nela caso o algoritmo parasse aí. Finalizado o algoritmo, tem-se que o número de pilhas corresponde ao comprimento máximo da LIS, e que a soma cumulativa guardada na carta do topo da pilha mais à direita será o número de ocorrências dessa mesma LIS.
 
 \vspace{0.5mm}
-A solução para o \textbf{segundo problema} teve por base uma abordagem em programação dinâmica. Recorreu-se a um vector, $l$, que, no final, terá em cada entrada o comprimento da LCIS a terminar no elemento correspondente da segunda sequência-argumento. Ambas as sequências são percorridas, e, para cada elemento: se os elementos forem \textbf{iguais} e a LCIS a ser formada com esse elemento comum for maior que a LCIS já conhecida a terminar nele, a entrada correspondente em $l$ é incrementada. Caso o elemento do primeiro vector for \textbf{maior} que o segundo e a LCIS a ser construída no ciclo atual for menor que a LCIS encontrada no elemento do segundo vector, então o comprimento da LCIS a ser construída é atualizado para esse valor.
-
-\vspace{0.5mm}
-O valor máximo de $l$ corresponde ao comprimento da LCIS.
+A solução para o \textbf{segundo problema} teve por base uma abordagem em programação dinâmica [2]. Recorreu-se a um vector, $l$, que, no final, terá em cada entrada o comprimento da LCIS a terminar no elemento correspondente da segunda sequência-argumento. Ambas as sequências são percorridas, e, para cada elemento: se os elementos forem \textbf{iguais} e a LCIS a ser formada com esse elemento comum for maior que a LCIS já conhecida a terminar nele, a entrada correspondente em $l$ é incrementada. Caso o elemento do primeiro vector for \textbf{maior} que o segundo e a LCIS a ser construída no ciclo atual for menor que a LCIS encontrada no elemento do segundo vector, então o comprimento da LCIS a ser construída é atualizado para esse valor. O valor máximo de $l$ corresponde ao comprimento da LCIS.
 
 \section{Análise Teórica}
 Seja $n$ o tamanho da primeira sequência e, no, caso do problema 2, $m$ o tamanho da segunda sequência.
@@ -59,11 +55,7 @@ Para o \textbf{primeiro problema}, foram utilizados vectores de pilhas e de as s
 Já em relação ao \textbf{segundo problema}, é guardado um vector com $m$ elementos, $\Theta(m)$. O custo espacial é, portanto, $\Theta(n + m)$, contando com o tratamento de dados. Todos os elementos da primeira sequência são comparados com todos os da segunda, ocorrendo, no pior caso, $O(nm)$ comparações. O algoritmo tem, portanto, complexidade temporal $O(nm)$. Para a apresentação dos dados, ocorre uma passagem linear, $O(m)$, por um vector, sem influência, portanto, na complexidade temporal do algoritmo.
 
 \section{Avaliação Experimental dos Resultados}
-Para analisar o algoritmo, optou-se por usar a ferramenta \texttt{hyperfine} para \textit{benchmarking}, gerando sequências de tamanho arbitrário com um pequeno programa em \texttt{Python} (sequências ordenadas de forma estritamente crescente, de modo a testar os piores casos de cada algoritmo).
-
-% TODO - adicionar gráficos aqui
-% TODO - BIBLIOGRAFIA
-% TODO - DIZER QUE N == M
+Para analisar o algoritmo, optou-se por usar a ferramenta \texttt{hyperfine} para \textit{benchmarking}, gerando sequências de tamanho arbitrário com um pequeno programa em \texttt{Python} (sequências ordenadas de forma estritamente crescente).
 
 \begin{figure}[h]
     \centering
@@ -71,10 +63,18 @@ Para analisar o algoritmo, optou-se por usar a ferramenta \texttt{hyperfine} par
     \qquad
     \subfloat[\centering Solução - Problema 2 ($O(nm)$)]{\includegraphics[width=7.35cm]{graph-problem-2.png}}
     \caption{Complexidade temporal da solução proposta para os dois problemas}
-    \label{fig:test-graph}
+    \label{fig:graph-problem-1-2}
 \end{figure}
 \vspace{0.5mm}
 
 Os valores obtidos demonstram, para o problema 1, uma tendência $n\log{n}$ na curva do gráfico, e uma $nm$ para o problema 2, tal como esperado. De realçar que para o problema 2 foi utilizado um valor de $m$ igual ao de $n$, por simplicidade.
+
+\begin{thebibliography}{2}
+    \bibitem{Problem1}
+    Wayne, K. (2018, April 11). \textit{Longest Increasing Subsequence} [PowerPoint slides]. Computer Science Department, Princeton University.
+
+    \bibitem{Problem2}
+    Sakai, Y. (2006). \textit{A linear space algorithm for computing a longest common increasing subsequence}.
+\end{thebibliography}
 
 \end{document}

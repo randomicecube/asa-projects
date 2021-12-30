@@ -9,7 +9,6 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
-#include <stdlib.h>
 
 typedef unsigned long ll;
 typedef ll Card;
@@ -27,23 +26,12 @@ void addOtherPile(std::vector<Pile> &piles, std::vector<std::vector<ll>> &cumSum
 void solveLIS(std::vector<Card> &v, ll noElements); // LIS standing for Longest Increasing Subsequence
 void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements2); // LCIS standing for Longest Common Increasing Subsequence
 
-std::vector<ll> generateVector(int size) {
-    std::vector<ll> v;
-    for (int i = 0; i < size; i++) { v.push_back(rand() % 10000); }
-    return v;
-}
-
 int main(int argc, char *argv[]) {
   int numSequences = 2;
-  // std::cin >> numSequences;
-  // std::cin.ignore(); // consumes newline
+  std::cin >> numSequences;
+  std::cin.ignore(); // consumes newline
 
   if (numSequences == FIRST_PROBLEM) {
-		// char *p;
-    // ll arg = strtol(argv[1], &p, 10);
-    // ll n;
-    // std::cin >> n;
-    // std::vector<Card> v = generateVector(n);
     std::vector<Card> v;
     ll noElements = parseVector(v);
     solveLIS(v, noElements);
@@ -51,19 +39,9 @@ int main(int argc, char *argv[]) {
     std::vector<Card> v1, v2;
     std::unordered_map<ll, bool> map;
     ll noElements2;
-    std::cout << "got to the first" << std::endl;
     parseFirstCommonVector(v1, map);
-    std::cout << "got to the second" << std::endl;
     noElements2 = parseSecondCommonVector(v2, map);
-    std::cout << "got to the third" << std::endl;
-    std::cout << "first vector" << std::endl;
-    for (auto i : v1) { std::cout << i << " "; }
-    std::cout << std::endl;
-    std::cout << "second vector" << std::endl;
-    for (auto i : v2) { std::cout << i << " "; }
-    std::cout << std::endl;
     solveLCIS(v1, v2, noElements2);
-    std::cout << "got to the fourth" << std::endl;
   }
   
   return 0;
@@ -168,7 +146,7 @@ void solveLIS(std::vector<ll> &v, ll noElements) {
   	}
 	}
 
-  // std::cout << piles.size() << " " << cumSums.back().back() << '\n';
+  std::cout << piles.size() << " " << cumSums.back().back() << '\n';
 }
 
 void solveLCIS(std::vector<ll> &v1, std::vector<ll> &v2, ll noElements2) {
