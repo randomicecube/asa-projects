@@ -1,0 +1,3 @@
+#!/bin/sh
+
+g++ -std=c++11 -O3 -Wall src/main.cpp -lm -o src/a.out && src/a.out $1

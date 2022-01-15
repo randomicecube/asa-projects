@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "n,time" > result-problem-2.csv
+
 for i in {10000..250000..10000}; do
   VEC1=$(python generate-vectors.py $i)
   VEC2=$(python generate-vectors.py $i)

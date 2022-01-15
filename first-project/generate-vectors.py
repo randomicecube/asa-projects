@@ -21,7 +21,7 @@ from math import log
 #     if problem == 2:
 #         vector_generator()
 
-# print(1)
+print("1")
 # 
 for i in range(1,int(sys.argv[1])+1):
     print(i, end="")

@@ -1,5 +1,18 @@
 # Don't add .out files to git
 
-**/src/*.out
-**/*.py
-**/*.txt
+*.out
+*.txt
+
+# Don't add tex-related files (except the .tex itself)
+*.aux
+*.bbl
+*.blg
+*.log
+*.run.xml
+*.bib
+*.fdb_latexmk
+*.fls
+*.bcf
+*.csv
+*.json
+*.ipynb
