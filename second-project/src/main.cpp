@@ -1,63 +1,122 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <queue>
 
-typedef int Vertex;
-typedef std::unordered_map<Vertex, std::vector<Vertex>> Graph;
+typedef int Node;
 
-int sccAmount(Graph &graph, int n);
-bool cyclesExist(Graph &graph, int n);
-void findLowestCommonAncestor(Graph &graph, int n, int m);
+int lookupTime = -1;
 
-int main() {
-  Vertex n, m;
-  std::cin >> n >> m;
+bool cyclesExist(std::unordered_map<Node, std::vector<Node>> adjList) {
+  int v = adjList.size();
+  std::vector<int> inDegree(v, 0);
+  std::queue<Node> q;
 
-  int noVertexes, noEdges;
-  std::cin >> noVertexes >> noEdges; 
-
-  Graph genTree;
-
-  for (int i = 0; i < noEdges; i++) {
-    Vertex parent, child;
-    std::cin >> parent >> child;
-    genTree[parent].push_back(child);
+  for (auto pair : adjList) { // O(V + E)
+    for (Node v : pair.second) {
+      inDegree[v]++;
+    }
   }
 
-  if (cyclesExist(genTree, noVertexes)) {
+  for (int i = 0; i < v; i++) { // O(V)
+    if (inDegree[i] == 0) {
+      q.push(i);
+    }
+  }
+
+  int count = 1;
+  while (!q.empty()) { // O (V + E)
+    Node u = q.front();
+    q.pop();
+    for (Node v : adjList[u]) {
+      inDegree[v]--;
+      if (inDegree[v] == 0) {
+        q.push(v);
+        count++;
+      }
+    }
+  }
+  return count != v;
+}
+
+bool invalidParents(Node x, Node y, std::unordered_map<Node, std::vector<Node>> &parents) {
+  // graph's invalid if there are already 2 parents for x
+  // or if both x and the other parent of y have the same parent
+  int noParents = parents[x].size();
+  if (noParents == 2) { // we would be adding a third parent
+    return true;
+  }
+  if (noParents == 1) {
+    for (Node yParent : parents[y]) {
+      for (Node yGrandParent : parents[yParent]) {
+        if (yGrandParent == parents[x][0]) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+void xLookup(int time, Node x, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &xSearch) {
+  xSearch[x] = time;
+  if (parents[x].size() == 0) {
+    return;
+  }
+  for (Node xParent : parents[x]) {
+    xLookup(time + 1, xParent, parents, xSearch);
+  }
+}
+
+int yLookup(Node y, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &xSearch) {
+  if (parents[y].size() == 0 && xSearch[y] == 0) {
+    std::cout << "-";
+    return -1;
+  }
+  if ((lookupTime == -1 || xSearch[y] <= lookupTime) && xSearch[y] > 0) {
+    if (lookupTime == -1) { // first Node to print
+      lookupTime = xSearch[y];
+    } else { // not the first, print the space
+      std::cout << " ";
+    }
+    std::cout << y;
+    return 0;
+  }
+  for (Node yParent : parents[y]) {
+    yLookup(yParent, parents, xSearch);
+  }
+  return 0;
+}
+
+int main() {
+  int n, m;
+  std::cin >> n >> m;
+  int noNodes, noEdges;
+  std::cin >> noNodes >> noEdges;
+  
+  // parents[i] = [u, v] means that u and v are i's parents
+  std::unordered_map<Node, std::vector<Node>> parents;
+  std::unordered_map<Node, std::vector<Node>> adjList;
+
+  for (int i = 0; i < noEdges; i++) {
+    int x, y;
+    std::cin >> x >> y;
+    if (invalidParents(x, y, parents)) {
+      std::cout << 0 << std::endl;
+      return 0;
+    }
+    parents[y].push_back(x); // x is y's parent
+    adjList[x].push_back(y); // y is x's child
+  }
+
+  if (cyclesExist(adjList)) {
     std::cout << 0 << std::endl;
     return 0;
   }
 
-  findLowestCommonAncestor(genTree, n, m);
-
+  std::unordered_map<Node, int> xSearch;
+  xLookup(1, n, parents, xSearch);
+  yLookup(m, parents, xSearch);
+  std::cout << std::endl;
   return 0;
-}
-
-/* 
- * Finds the amount of strongly connected components in the graph
- * If there are less than n scc's, there is a cycle
- */
-int sccAmount(Graph &graph, int n) {
-  int n = 0;
-  return n;
-}
-
-/*
- * Checks if there are cycles in the graph
- * Is aided by sccAmount for that
- */
-bool cyclesExist(Graph &graph, int n) {
-  // if there are != than n SCCs, there is at least one cycle
-  // we check != than and not just < because we need to check
-  // whether all vertexes are attainable or not
-  // find SCCs in graph
-  return false;
-}
-
-/*
- * Finds the lowest common ancestor of two nodes
- */
-void findLowestCommonAncestor(Graph &graph, Vertex n, Vertex m) {
-  printf("test\n");
 }
