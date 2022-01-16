@@ -1,12 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 typedef int Node;
+typedef std::map<Node, std::vector<Node>> Graph;
+typedef std::map<Node, int> Distances;
 
-int lookupTime = -1;
-
-bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, std::unordered_map<Node, std::vector<Node>> &adjList) {
+bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, Graph &adjList) {
   if (!visited[v]) {
     visited[v] = true;
     inStack[v] = true;
@@ -23,7 +23,7 @@ bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, 
   return false;
 }
 
-bool cyclesExist(int noNodes, std::unordered_map<Node, std::vector<Node>> &adjList) {
+bool cyclesExist(int noNodes, Graph &adjList) {
   std::vector<bool> visited(noNodes);
   std::vector<bool> inStack(noNodes);
   for (auto pair: adjList) {
@@ -38,7 +38,7 @@ bool cyclesExist(int noNodes, std::unordered_map<Node, std::vector<Node>> &adjLi
   return false;
 }
 
-void lookup(int time, Node x, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &lookupTimeTable) {
+void lookup(int time, Node x, Graph &parents, Distances &lookupTimeTable) {
   lookupTimeTable[x] = time;
   for (Node xParent : parents[x]) {
     lookup(time + 1, xParent, parents, lookupTimeTable);
@@ -52,9 +52,9 @@ int main() {
   std::cin >> noNodes >> noEdges;
   
   // parents[i] = [u, v] means that u and v are i's parents
-  std::unordered_map<Node, std::vector<Node>> parents;
+  Graph parents;
   // adjList[i] = [j, k] means that there is an edge from i to j and from i to k
-  std::unordered_map<Node, std::vector<Node>> adjList;
+  Graph adjList;
 
   for (int i = 0; i < noEdges; i++) {
     int x, y;
@@ -72,19 +72,29 @@ int main() {
     return 0;
   }
 
-
-  std::unordered_map<Node, int> xSearch;
-  std::unordered_map<Node, int> ySearch;
-  lookup(1, n, parents, xSearch);
-  lookup(1, m, parents, ySearch);
-  // print xSearch
-  for (auto pair: xSearch) {
-    printf("printing xSearch: %d %d\n", pair.first, pair.second);
+  Distances xLookup;
+  Distances yLookup;
+  Distances overallLookup;
+  int minDistance = 0;
+  bool printed = false;
+  lookup(1, n, parents, xLookup);
+  lookup(1, m, parents, yLookup);
+  for (auto pair: xLookup) {
+    if (yLookup[pair.first] != 0) {
+      overallLookup[pair.first] = std::min(pair.second, yLookup[pair.first]);
+      if (minDistance == 0 || overallLookup[pair.first] < minDistance) {
+        minDistance = overallLookup[pair.first];
+      }
+    }
   }
-  printf("-----------------\n");
-  // print ySearch
-  for (auto pair: ySearch) {
-    printf("printing ySearch: %d %d\n", pair.first, pair.second);
+  for (auto pair: overallLookup) {
+    if (pair.second == minDistance) {
+      std::cout << pair.first << " ";
+      printed = true;
+    }
+  }
+  if (!printed) {
+    std::cout << "-";
   }
   std::cout << std::endl;
   return 0;
