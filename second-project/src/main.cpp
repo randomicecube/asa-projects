@@ -39,9 +39,7 @@ bool cyclesExist(int noNodes, std::unordered_map<Node, std::vector<Node>> &adjLi
 }
 
 void lookup(int time, Node x, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &lookupTimeTable) {
-  if (lookupTimeTable[x] == 0 || time < lookupTimeTable[x]) {
-    lookupTimeTable[x] = time;
-  }
+  lookupTimeTable[x] = time;
   for (Node xParent : parents[x]) {
     lookup(time + 1, xParent, parents, lookupTimeTable);
   }
