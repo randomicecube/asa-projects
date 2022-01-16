@@ -45,6 +45,54 @@ void lookup(int time, Node x, Graph &parents, Distances &lookupTimeTable) {
   }
 }
 
+void lca(Node x, Node y, Graph &parents) {
+  Distances xLookup;
+  Distances yLookup;
+  Distances overallLookup;
+  int minDistance = 0;
+  bool printed = false;
+  lookup(1, x, parents, xLookup);
+  // print lookup table
+  std::cout << "x lookup table: " << std::endl;
+  for (auto pair: xLookup) {
+    std::cout << pair.first << ": " << pair.second << std::endl;
+  }
+  printf("...\n");
+  std::cout << "y lookup table: " << std::endl;
+  lookup(1, y, parents, yLookup);
+  // print lookup table
+  for (auto pair: yLookup) {
+    std::cout << pair.first << ": " << pair.second << std::endl;
+  }
+  printf("...\n");
+  for (auto pair: xLookup) {
+    if (yLookup[pair.first] != 0) {
+      overallLookup[pair.first] = std::min(pair.second, yLookup[pair.first]);
+      if (minDistance == 0 || overallLookup[pair.first] < minDistance) {
+        minDistance = overallLookup[pair.first];
+      }
+    }
+  }
+  // print overallLookup table
+  std::cout << "commonLookup: " << std::endl;
+  for (auto pair: overallLookup) {
+    std::cout << pair.first << ": " << pair.second << std::endl;
+  }
+  // printf("overallLookup[2] is %d\n", overallLookup[2]);
+  // printf("overallLookup[4] is %d\n", overallLookup[4]);
+  printf("minDistance is %d\n", minDistance);
+  for (auto pair: overallLookup) {
+    if (pair.second == minDistance) {
+      std::cout << pair.first << " ";
+      printed = true;
+    }
+  }
+  if (!printed) {
+    std::cout << "-";
+  }
+  std::cout << std::endl;
+}
+
 int main() {
   int n, m;
   std::cin >> n >> m;
@@ -72,30 +120,6 @@ int main() {
     return 0;
   }
 
-  Distances xLookup;
-  Distances yLookup;
-  Distances overallLookup;
-  int minDistance = 0;
-  bool printed = false;
-  lookup(1, n, parents, xLookup);
-  lookup(1, m, parents, yLookup);
-  for (auto pair: xLookup) {
-    if (yLookup[pair.first] != 0) {
-      overallLookup[pair.first] = std::min(pair.second, yLookup[pair.first]);
-      if (minDistance == 0 || overallLookup[pair.first] < minDistance) {
-        minDistance = overallLookup[pair.first];
-      }
-    }
-  }
-  for (auto pair: overallLookup) {
-    if (pair.second == minDistance) {
-      std::cout << pair.first << " ";
-      printed = true;
-    }
-  }
-  if (!printed) {
-    std::cout << "-";
-  }
-  std::cout << std::endl;
+  lca(n, m, parents);
   return 0;
 }
