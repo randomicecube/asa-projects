@@ -1,91 +1,50 @@
 #include <iostream>
 #include <vector>
 #include <unordered_map>
-#include <queue>
 
 typedef int Node;
 
 int lookupTime = -1;
 
-bool cyclesExist(std::unordered_map<Node, std::vector<Node>> adjList) {
-  int v = adjList.size();
-  std::vector<int> inDegree(v, 0);
-  std::queue<Node> q;
-
-  for (auto pair : adjList) { // O(V + E)
-    for (Node v : pair.second) {
-      inDegree[v]++;
-    }
-  }
-
-  for (int i = 0; i < v; i++) { // O(V)
-    if (inDegree[i] == 0) {
-      q.push(i);
-    }
-  }
-
-  int count = 1;
-  while (!q.empty()) { // O (V + E)
-    Node u = q.front();
-    q.pop();
-    for (Node v : adjList[u]) {
-      inDegree[v]--;
-      if (inDegree[v] == 0) {
-        q.push(v);
-        count++;
+bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, std::unordered_map<Node, std::vector<Node>> &adjList) {
+  if (!visited[v]) {
+    visited[v] = true;
+    inStack[v] = true;
+    for (Node w : adjList[v]) {
+      if (!visited[w] && cycleFound(w, visited, inStack, adjList)) {
+        return true;
+      }
+      if (inStack[w]) {
+        return true;
       }
     }
   }
-  return count != v;
+  inStack[v] = false;
+  return false;
 }
 
-bool invalidParents(Node x, Node y, std::unordered_map<Node, std::vector<Node>> &parents) {
-  // graph's invalid if there are already 2 parents for x
-  // or if both x and the other parent of y have the same parent
-  int noParents = parents[x].size();
-  if (noParents == 2) { // we would be adding a third parent
-    return true;
+bool cyclesExist(int noNodes, std::unordered_map<Node, std::vector<Node>> &adjList) {
+  std::vector<bool> visited(noNodes);
+  std::vector<bool> inStack(noNodes);
+  for (auto pair: adjList) {
+    visited[pair.first] = false;
+    inStack[pair.first] = false;
   }
-  if (noParents == 1) {
-    for (Node yParent : parents[y]) {
-      for (Node yGrandParent : parents[yParent]) {
-        if (yGrandParent == parents[x][0]) {
-          return true;
-        }
-      }
+  for (auto pair: adjList) { // indexed from 1
+    if (cycleFound(pair.first, visited, inStack, adjList)) {
+      return true;
     }
   }
   return false;
 }
 
-void xLookup(int time, Node x, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &xSearch) {
-  xSearch[x] = time;
-  if (parents[x].size() == 0) {
-    return;
+void lookup(int time, Node x, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &lookupTimeTable) {
+  if (lookupTimeTable[x] == 0 || time < lookupTimeTable[x]) {
+    lookupTimeTable[x] = time;
   }
   for (Node xParent : parents[x]) {
-    xLookup(time + 1, xParent, parents, xSearch);
+    lookup(time + 1, xParent, parents, lookupTimeTable);
   }
-}
-
-int yLookup(Node y, std::unordered_map<Node, std::vector<Node>> &parents, std::unordered_map<Node, int> &xSearch) {
-  if (parents[y].size() == 0 && xSearch[y] == 0) {
-    std::cout << "-";
-    return -1;
-  }
-  if ((lookupTime == -1 || xSearch[y] <= lookupTime) && xSearch[y] > 0) {
-    if (lookupTime == -1) { // first Node to print
-      lookupTime = xSearch[y];
-    } else { // not the first, print the space
-      std::cout << " ";
-    }
-    std::cout << y;
-    return 0;
-  }
-  for (Node yParent : parents[y]) {
-    yLookup(yParent, parents, xSearch);
-  }
-  return 0;
 }
 
 int main() {
@@ -96,12 +55,13 @@ int main() {
   
   // parents[i] = [u, v] means that u and v are i's parents
   std::unordered_map<Node, std::vector<Node>> parents;
+  // adjList[i] = [j, k] means that there is an edge from i to j and from i to k
   std::unordered_map<Node, std::vector<Node>> adjList;
 
   for (int i = 0; i < noEdges; i++) {
     int x, y;
     std::cin >> x >> y;
-    if (invalidParents(x, y, parents)) {
+    if (parents[y].size() == 2) { // we would be adding a third parent
       std::cout << 0 << std::endl;
       return 0;
     }
@@ -109,14 +69,25 @@ int main() {
     adjList[x].push_back(y); // y is x's child
   }
 
-  if (cyclesExist(adjList)) {
+  if (cyclesExist(noNodes, adjList)) {
     std::cout << 0 << std::endl;
     return 0;
   }
 
+
   std::unordered_map<Node, int> xSearch;
-  xLookup(1, n, parents, xSearch);
-  yLookup(m, parents, xSearch);
+  std::unordered_map<Node, int> ySearch;
+  lookup(1, n, parents, xSearch);
+  lookup(1, m, parents, ySearch);
+  // print xSearch
+  for (auto pair: xSearch) {
+    printf("printing xSearch: %d %d\n", pair.first, pair.second);
+  }
+  printf("-----------------\n");
+  // print ySearch
+  for (auto pair: ySearch) {
+    printf("printing ySearch: %d %d\n", pair.first, pair.second);
+  }
   std::cout << std::endl;
   return 0;
 }
