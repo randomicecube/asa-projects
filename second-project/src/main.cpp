@@ -6,40 +6,35 @@
  ************************************************************/
 #include <iostream>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <algorithm>
 
 typedef int Node;
-typedef enum { WHITE, BLACK } Color;
-typedef std::map<Node, std::vector<Node>> Graph;
-typedef std::map<Node, Color> Ancestors;
+typedef enum { WHITE, GRAY, BLACK } Color;
+typedef std::unordered_map<Node, std::vector<Node>> Graph;
+typedef std::unordered_map<Node, Color> Ancestors;
 
-bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, Graph &adjList) {
-  if (!visited[v]) {
-    visited[v] = true;
-    inStack[v] = true;
-    for (Node w : adjList[v]) {
-      if (!visited[w] && cycleFound(w, visited, inStack, adjList)) {
-        return true;
-      }
-      if (inStack[w]) {
-        return true;
-      }
+bool isCyclicUtil(Node v, std::vector<Color> &visited, Graph &adjList) {
+  visited[v] = GRAY;
+  for (Node u: adjList[v]) {
+    if (
+      visited[u] == GRAY ||
+      (visited[u] == WHITE && isCyclicUtil(u, visited, adjList))  
+    ) {
+      return true;
     }
   }
-  inStack[v] = false;
+  visited[v] = BLACK;
   return false;
 }
 
-bool cyclesExist(int noNodes, Graph &adjList) {
-  std::vector<bool> visited(noNodes);
-  std::vector<bool> inStack(noNodes);
-  for (auto pair: adjList) {
-    visited[pair.first] = false;
-    inStack[pair.first] = false;
-  }
-  for (auto pair: adjList) { // indexed from 1
-    if (!visited[pair.first] && cycleFound(pair.first, visited, inStack, adjList)) {
-      return true;
+bool isCyclic(int noNodes, Graph &adjList) {
+  std::vector<Color> visited(noNodes, WHITE);
+  for (Node v: visited) {
+    if (v == WHITE) {
+      if (isCyclicUtil(v, visited, adjList)) {
+        return true;
+      }
     }
   }
   return false;
@@ -77,14 +72,16 @@ void lca(Node x, Node y, Graph &parents) {
   Ancestors yTable;
   xLookup(x, parents, xTable);
   yLookup(y, parents, xTable, yTable);
-  bool printed = false;
+  // sort yTable's keys that are WHITE
+  std::vector<Node> whiteKeys;
   for (auto pair: yTable) {
-    if (pair.second == WHITE) {
-      std::cout << pair.first << " ";
-      printed = true;
-    }
+    if (pair.second == WHITE) whiteKeys.push_back(pair.first);
   }
-  if (!printed) {
+  std::sort(whiteKeys.begin(), whiteKeys.end());
+  for (Node v: whiteKeys) {
+    std::cout << v << " ";
+  }
+  if (whiteKeys.size() == 0) {
     std::cout << "-";
   }
   std::cout << std::endl;
@@ -114,7 +111,7 @@ int main() {
     adjList[x].push_back(y); // y is x's child
   }
 
-  if (cyclesExist(noNodes, adjList)) {
+  if (isCyclic(noNodes, adjList)) {
     std::cout << 0 << std::endl;
     return 0;
   }
