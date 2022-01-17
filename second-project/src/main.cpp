@@ -1,10 +1,17 @@
+/*************************************************************
+ * IST - ASA 21/22
+ * Group - al038
+ * Diogo Melita, 99202
+ * Diogo Gaspar, 99207
+ ************************************************************/
 #include <iostream>
 #include <vector>
 #include <map>
 
 typedef int Node;
+typedef enum { WHITE, BLACK } Color;
 typedef std::map<Node, std::vector<Node>> Graph;
-typedef std::map<Node, int> Distances;
+typedef std::map<Node, Color> Ancestors;
 
 bool cycleFound(Node v, std::vector<bool> &visited, std::vector<bool> &inStack, Graph &adjList) {
   if (!visited[v]) {
@@ -31,58 +38,48 @@ bool cyclesExist(int noNodes, Graph &adjList) {
     inStack[pair.first] = false;
   }
   for (auto pair: adjList) { // indexed from 1
-    if (cycleFound(pair.first, visited, inStack, adjList)) {
+    if (!visited[pair.first] && cycleFound(pair.first, visited, inStack, adjList)) {
       return true;
     }
   }
   return false;
 }
 
-void lookup(int time, Node x, Graph &parents, Distances &lookupTimeTable) {
-  lookupTimeTable[x] = time;
+void xLookup(Node x, Graph &parents, Ancestors &xTable) {
+  xTable[x] = BLACK;
   for (Node xParent : parents[x]) {
-    lookup(time + 1, xParent, parents, lookupTimeTable);
+    xLookup(xParent, parents, xTable);
+  }
+}
+
+void yCleanup(Node y, Graph &parents, Ancestors &yTable) {
+  yTable[y] = BLACK;
+  for (Node yParent : parents[y]) {
+    yCleanup(yParent, parents, yTable);
+  }
+}
+
+void yLookup(Node y, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
+  if (xTable[y] == BLACK && yTable[y] != BLACK) {
+    yTable[y] = WHITE;
+    for (Node yParent : parents[y]) {
+      yCleanup(yParent, parents, yTable);
+    }
+  } else {
+    for (Node yParent : parents[y]) {
+      yLookup(yParent, parents, xTable, yTable);
+    }
   }
 }
 
 void lca(Node x, Node y, Graph &parents) {
-  Distances xLookup;
-  Distances yLookup;
-  Distances overallLookup;
-  int minDistance = 0;
+  Ancestors xTable;
+  Ancestors yTable;
+  xLookup(x, parents, xTable);
+  yLookup(y, parents, xTable, yTable);
   bool printed = false;
-  lookup(1, x, parents, xLookup);
-  // print lookup table
-  std::cout << "x lookup table: " << std::endl;
-  for (auto pair: xLookup) {
-    std::cout << pair.first << ": " << pair.second << std::endl;
-  }
-  printf("...\n");
-  std::cout << "y lookup table: " << std::endl;
-  lookup(1, y, parents, yLookup);
-  // print lookup table
-  for (auto pair: yLookup) {
-    std::cout << pair.first << ": " << pair.second << std::endl;
-  }
-  printf("...\n");
-  for (auto pair: xLookup) {
-    if (yLookup[pair.first] != 0) {
-      overallLookup[pair.first] = std::min(pair.second, yLookup[pair.first]);
-      if (minDistance == 0 || overallLookup[pair.first] < minDistance) {
-        minDistance = overallLookup[pair.first];
-      }
-    }
-  }
-  // print overallLookup table
-  std::cout << "commonLookup: " << std::endl;
-  for (auto pair: overallLookup) {
-    std::cout << pair.first << ": " << pair.second << std::endl;
-  }
-  // printf("overallLookup[2] is %d\n", overallLookup[2]);
-  // printf("overallLookup[4] is %d\n", overallLookup[4]);
-  printf("minDistance is %d\n", minDistance);
-  for (auto pair: overallLookup) {
-    if (pair.second == minDistance) {
+  for (auto pair: yTable) {
+    if (pair.second == WHITE) {
       std::cout << pair.first << " ";
       printed = true;
     }
@@ -94,6 +91,7 @@ void lca(Node x, Node y, Graph &parents) {
 }
 
 int main() {
+  std::ios::sync_with_stdio(false);
   int n, m;
   std::cin >> n >> m;
   int noNodes, noEdges;
