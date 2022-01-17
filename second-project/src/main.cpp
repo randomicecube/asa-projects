@@ -48,14 +48,14 @@ bool cyclesExist(int noNodes, Graph &adjList) {
 void xLookup(Node x, Graph &parents, Ancestors &xTable) {
   xTable[x] = BLACK;
   for (Node xParent : parents[x]) {
-    xLookup(xParent, parents, xTable);
+    if(xTable[xParent] != BLACK) xLookup(xParent, parents, xTable);
   }
 }
 
 void yCleanup(Node y, Graph &parents, Ancestors &yTable) {
   yTable[y] = BLACK;
   for (Node yParent : parents[y]) {
-    yCleanup(yParent, parents, yTable);
+    if (yTable[yParent] != BLACK) yCleanup(yParent, parents, yTable);
   }
 }
 
@@ -63,7 +63,7 @@ void yLookup(Node y, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
   if (xTable[y] == BLACK && yTable[y] != BLACK) {
     yTable[y] = WHITE;
     for (Node yParent : parents[y]) {
-      yCleanup(yParent, parents, yTable);
+      if (yTable[y] != BLACK) yCleanup(yParent, parents, yTable);
     }
   } else {
     for (Node yParent : parents[y]) {
