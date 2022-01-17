@@ -93,9 +93,15 @@ void lca(Node x, Node y, Graph &parents) {
 int main() {
   std::ios::sync_with_stdio(false);
   int n, m;
-  std::cin >> n >> m;
+  scanf("%d %d", &n, &m);
+  printf("n = %d, m = %d\n", n, m);
+  // std::cin >> n >> m;
+  getchar();
   int noNodes, noEdges;
-  std::cin >> noNodes >> noEdges;
+  scanf("%d %d", &noNodes, &noEdges);
+  printf("noNodes = %d, noEdges = %d\n", noNodes, noEdges);
+  // std::cin >> noNodes >> noEdges;
+  getchar();
   
   // parents[i] = [u, v] means that u and v are i's parents
   Graph parents;
@@ -104,13 +110,16 @@ int main() {
 
   for (int i = 0; i < noEdges; i++) {
     int x, y;
-    std::cin >> x >> y;
+    char c;
+    scanf("%d%c%d", &x, &c, &y);
+    printf("x is %d, y is %d\n", x, y);
     if (parents[y].size() == 2) { // we would be adding a third parent
       std::cout << 0 << std::endl;
       return 0;
     }
     parents[y].push_back(x); // x is y's parent
     adjList[x].push_back(y); // y is x's child
+    getchar();
   }
 
   if (cyclesExist(noNodes, adjList)) {
