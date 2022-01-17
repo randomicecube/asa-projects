@@ -6,13 +6,12 @@
  ************************************************************/
 #include <iostream>
 #include <vector>
-#include <unordered_map>
 #include <algorithm>
 
-typedef int Node;
-typedef enum { WHITE, GRAY, BLACK } Color;
-typedef std::unordered_map<Node, std::vector<Node>> Graph;
-typedef std::unordered_map<Node, Color> Ancestors;
+using Node = int;
+using Color = enum { WHITE, GRAY, BLACK };
+using Graph = std::vector<std::vector<Node>>;
+using Ancestors = std::vector<Color>;
 
 bool isCyclicVisit(Node &v, std::vector<Color> &visited, Graph &adjList) {
   visited[v] = GRAY;
@@ -53,7 +52,7 @@ void yLookup(Node &y, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
   if (xTable[y] == BLACK && yTable[y] == WHITE) {
     yTable[y] = GRAY;
     for (Node yParent : parents[y]) {
-      if (yTable[yParent] != BLACK) yCleanup(yParent, parents, yTable); // IT NEEDS TO BE GRAY!
+      if (yTable[yParent] != BLACK) yCleanup(yParent, parents, yTable); // CLEANED IF IT HASN'T ALREADY BEEN
     }
   } else {
     yTable[y] = BLACK;
@@ -64,14 +63,14 @@ void yLookup(Node &y, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
 }
 
 void lca(Node &x, Node &y, Graph &parents) {
-  Ancestors xTable;
-  Ancestors yTable;
+  Ancestors xTable(parents.size() + 1, WHITE);
+  Ancestors yTable(parents.size() + 1, WHITE);
   xLookup(x, parents, xTable);
   yLookup(y, parents, xTable, yTable); // they all start at WHITE
   // sort yTable's keys that are GRAY
   std::vector<Node> grayKeys;
-  for (auto pair: yTable) {
-    if (pair.second == GRAY) grayKeys.push_back(pair.first);
+  for (Node i = 0; i < (int) yTable.size(); i++) {
+    if (yTable[i] == GRAY) grayKeys.push_back(i);
   }
   std::sort(grayKeys.begin(), grayKeys.end());
   for (Node v: grayKeys) {
@@ -91,17 +90,12 @@ int main() {
   std::cin >> noNodes >> noEdges;
 
   // parents[i] = [u, v] means that u and v are i's parents
-  Graph parents;
-  // reserve space for all nodes
-  parents.reserve(noNodes);
+  Graph parents(noNodes + 1);
   // adjList[i] = [j, k] means that there is an edge from i to j and from i to k
-  Graph adjList;
-  // reserve space for all nodes
-  adjList.reserve(noNodes);
+  Graph adjList(noNodes + 1);
 
-  for (int i = 0; i < noEdges; i++) {
-    int x, y;
-    std::cin >> x >> y;
+  int x, y;
+  for (int i = 0; i < noEdges && std::cin >> x >> y; i++) {
     if (parents[y].size() == 2) { // we would be adding a third parent
       std::cout << 0 << std::endl;
       return 0;
