@@ -26,8 +26,8 @@ bool isCyclicVisit(Node &v, std::vector<Color> &visited, Graph &adjList) {
 
 bool isCyclic(int &noNodes, Graph &adjList) {
   std::vector<Color> visited(noNodes, WHITE);
-  for (Node v: visited) {
-    if (v == WHITE && isCyclicVisit(v, visited, adjList)) {
+  for (Node i = 0; i < noNodes; i++) {
+    if (visited[i] == WHITE && isCyclicVisit(i, visited, adjList)) {
       return true;
     }
   }
