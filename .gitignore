@@ -2,6 +2,7 @@
 
 *.out
 *.txt
+*.in
 
 # Don't add tex-related files (except the .tex itself)
 *.aux
