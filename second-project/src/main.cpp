@@ -8,26 +8,34 @@
 #include <vector>
 #include <algorithm>
 
+typedef struct Vertex {
+  Vertex *leftParent;
+  Vertex *rightParent;
+  int parentAmount = 0;
+  int id;
+} Vertex;
+
 #define MAX_PARENTS 2
 using Node = int;
 using Color = enum { WHITE, GRAY, BLACK };
-using Graph = std::vector<std::vector<Node>>;
+using Graph = std::vector<Vertex*>;
 using Ancestors = std::vector<Color>;
 
-bool isCyclicVisit(Node &v, std::vector<Color> &visited, Graph &adjList) {
-  visited[v] = GRAY;
-  for (Node u: adjList[v]) {
-    if (visited[u] == GRAY || (visited[u] == WHITE && isCyclicVisit(u, visited, adjList))) {
-      return true;
-    }
+bool isCyclicVisit(int id, std::vector<Color> &visited, Graph &adjList) {
+  visited[id] = GRAY;
+  if (adjList[id]->leftParent != nullptr && (visited[adjList[id]->leftParent->id] == GRAY || isCyclicVisit(adjList[id]->leftParent->id, visited, adjList))) {
+    return true;
   }
-  visited[v] = BLACK;
+  if (adjList[id]->rightParent != nullptr && (visited[adjList[id]->rightParent->id] == GRAY || isCyclicVisit(adjList[id]->rightParent->id, visited, adjList))) {
+    return true;
+  }
+  visited[id] = BLACK;
   return false;
 }
 
-bool isCyclic(int &noNodes, Graph &adjList) {
+bool isCyclic(int noNodes, Graph &adjList) {
   std::vector<Color> visited(noNodes, WHITE);
-  for (Node i = 0; i < noNodes; i++) {
+  for (Node i = 1; i <= noNodes; i++) {
     if (visited[i] == WHITE && isCyclicVisit(i, visited, adjList)) {
       return true;
     }
@@ -35,35 +43,39 @@ bool isCyclic(int &noNodes, Graph &adjList) {
   return false;
 }
 
-void xLookup(Node &x, Graph &parents, Ancestors &xTable) {
-  xTable[x] = BLACK;
-  for (Node xParent : parents[x]) {
-    if(xTable[xParent] != BLACK) xLookup(xParent, parents, xTable);
+void xLookup(int id, Graph &parents, Ancestors &xTable) {
+  xTable[id] = BLACK;
+  if (parents[id]->leftParent != nullptr && xTable[parents[id]->leftParent->id] != BLACK) {
+    xLookup(parents[id]->leftParent->id, parents, xTable);
+  }
+  if (parents[id]->rightParent != nullptr && xTable[parents[id]->rightParent->id] != BLACK) {
+    xLookup(parents[id]->rightParent->id, parents, xTable);
   }
 }
 
-void yCleanup(Node &y, Graph &parents, Ancestors &yTable) {
-  yTable[y] = BLACK;
-  for (Node yParent : parents[y]) {
-    if (yTable[yParent] != BLACK) yCleanup(yParent, parents, yTable);
+void yCleanup(int id, Graph &parents, Ancestors &yTable) {
+  yTable[id] = BLACK;
+  if (parents[id]->leftParent != nullptr && yTable[parents[id]->leftParent->id] != BLACK) {
+    yCleanup(parents[id]->leftParent->id, parents, yTable);
+  }
+  if (parents[id]->rightParent != nullptr && yTable[parents[id]->rightParent->id] != BLACK) {
+    yCleanup(parents[id]->rightParent->id, parents, yTable);
   }
 }
 
-void yLookup(Node &y, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
-  if (xTable[y] == BLACK && yTable[y] == WHITE) {
-    yTable[y] = GRAY;
-    for (Node yParent : parents[y]) {
-      if (yTable[yParent] != BLACK) yCleanup(yParent, parents, yTable); // cleaned if it hasn't already been
-    }
+void yLookup(int id, Graph &parents, Ancestors &xTable, Ancestors &yTable) {
+  if (xTable[id] == BLACK && yTable[id] == WHITE) {
+    yTable[id] = GRAY;
+    if (parents[id]->leftParent != nullptr && yTable[parents[id]->leftParent->id] != BLACK) yCleanup(parents[id]->leftParent->id, parents, yTable);
+    if (parents[id]->rightParent != nullptr && yTable[parents[id]->rightParent->id] != BLACK) yCleanup(parents[id]->rightParent->id, parents, yTable);
   } else {
-    yTable[y] = BLACK;
-    for (Node yParent : parents[y]) {
-      if (yTable[yParent] == WHITE) yLookup(yParent, parents, xTable, yTable);
-    }
+    yTable[id] = BLACK;
+    if (parents[id]->leftParent != nullptr && yTable[parents[id]->leftParent->id] == WHITE) yLookup(parents[id]->leftParent->id, parents, xTable, yTable);
+    if (parents[id]->rightParent != nullptr && yTable[parents[id]->rightParent->id] == WHITE) yLookup(parents[id]->rightParent->id, parents, xTable, yTable);
   }
 }
 
-void lca(int &noNodes, Node &x, Node &y, Graph &parents) {
+void lca(int noNodes, int x, int y, Graph &parents) {
   Ancestors xTable(noNodes + 1, WHITE); // they all start at WHITE
   Ancestors yTable(noNodes + 1, WHITE); // they all start at WHITE
   xLookup(x, parents, xTable);
@@ -92,16 +104,26 @@ int main() {
   std::cin >> noNodes >> noEdges;
 
   // parents[i] = [u, v] means that u and v are i's parents
-  Graph parents(noNodes + 1);
+  Graph parents = Graph(noNodes + 1);
+  // actually allocate the amount of vertices needed
+  for (int i = 0; i <= noNodes; i++) {
+    parents[i] = new Vertex();
+  }
 
   Node x, y;
   int readEdges;
   for (readEdges = 0; readEdges < noEdges && std::cin >> x >> y; readEdges++) {
-    if (parents[y].size() == MAX_PARENTS) {
+    if (parents[y]->parentAmount == MAX_PARENTS) {
       std::cout << 0 << std::endl;
       return 0;
     }
-    parents[y].push_back(x); // x is y's parent
+    if (parents[y]->parentAmount == 0) parents[y]->leftParent = parents[x];
+    else parents[y]->rightParent = parents[x];
+    parents[y]->parentAmount++;
+  }
+
+  for (Node i = 0; i <= noNodes; i++) {
+    parents[i]->id = i;
   }
 
   if (readEdges < noEdges || isCyclic(noNodes, parents)) {
