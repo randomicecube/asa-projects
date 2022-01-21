@@ -8,17 +8,16 @@
 #include <vector>
 #include <algorithm>
 
-typedef struct Vertex {
-  Vertex *leftParent;
-  Vertex *rightParent;
+typedef struct Node {
+  Node *leftParent;
+  Node *rightParent;
   int parentAmount = 0;
   int id;
-} Vertex;
+} Node;
 
 #define MAX_PARENTS 2
-using Node = int;
 using Color = enum { WHITE, GRAY, BLACK };
-using Graph = std::vector<Vertex*>;
+using Graph = std::vector<Node*>;
 using Ancestors = std::vector<Color>;
 
 bool isCyclicVisit(int id, std::vector<Color> &visited, Graph &adjList) {
@@ -35,7 +34,7 @@ bool isCyclicVisit(int id, std::vector<Color> &visited, Graph &adjList) {
 
 bool isCyclic(int noNodes, Graph &adjList) {
   std::vector<Color> visited(noNodes, WHITE);
-  for (Node i = 1; i <= noNodes; i++) {
+  for (int i = 1; i <= noNodes; i++) {
     if (visited[i] == WHITE && isCyclicVisit(i, visited, adjList)) {
       return true;
     }
@@ -81,12 +80,12 @@ void lca(int noNodes, int x, int y, Graph &parents) {
   xLookup(x, parents, xTable);
   yLookup(y, parents, xTable, yTable);
   // sort yTable's keys that are GRAY
-  std::vector<Node> grayKeys;
-  for (Node i = 0; i < (int) yTable.size(); i++) {
+  std::vector<int> grayKeys;
+  for (int i = 0; i < (int) yTable.size(); i++) {
     if (yTable[i] == GRAY) grayKeys.push_back(i);
   }
   std::sort(grayKeys.begin(), grayKeys.end());
-  for (Node v: grayKeys) {
+  for (int v: grayKeys) {
     std::cout << v << " ";
   }
   if (grayKeys.size() == 0) {
@@ -107,10 +106,10 @@ int main() {
   Graph parents = Graph(noNodes + 1);
   // actually allocate the amount of vertices needed
   for (int i = 0; i <= noNodes; i++) {
-    parents[i] = new Vertex();
+    parents[i] = new Node();
   }
 
-  Node x, y;
+  int x, y;
   int readEdges;
   for (readEdges = 0; readEdges < noEdges && std::cin >> x >> y; readEdges++) {
     if (parents[y]->parentAmount == MAX_PARENTS) {
@@ -122,7 +121,7 @@ int main() {
     parents[y]->parentAmount++;
   }
 
-  for (Node i = 0; i <= noNodes; i++) {
+  for (int i = 0; i <= noNodes; i++) {
     parents[i]->id = i;
   }
 
